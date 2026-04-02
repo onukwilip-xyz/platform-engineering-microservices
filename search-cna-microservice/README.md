@@ -38,4 +38,14 @@ For Windows,
 `& minikube -p minikube docker-env --shell powershell | Invoke-Expression`
 
 Build docker image,
-`docker build -t search:latest .`
+```bash
+REPO_URL=us-central1-docker.pkg.dev/pe-staging-project-131b/images
+IMPERSONATE_SA=tf-platform@pe-terraform-project.iam.gserviceaccount.com
+
+gcloud auth login
+gcloud auth print-access-token \
+  --impersonate-service-account="$IMPERSONATE_SA" \
+  | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
+
+docker buildx build --platform linux/amd64 -t $REPO_URL/search:1 search-cna-microservice
+```
