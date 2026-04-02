@@ -21,4 +21,11 @@ Start applciation locally
 python app.py
 ```
 
-```docker build -t users:latest .```
+```bash
+gcloud auth login
+gcloud auth print-access-token \
+  --impersonate-service-account="$IMPERSONATE_SA" \
+  | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
+
+docker buildx build --platform linux/amd64 -t $REPO_URL/users:1 users-cna-microservice
+```
