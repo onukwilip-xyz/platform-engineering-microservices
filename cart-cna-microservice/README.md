@@ -37,4 +37,17 @@ For Windows,
 `& minikube -p minikube docker-env --shell powershell | Invoke-Expression`
 
 Build docker image,
-`docker build -t cart:latest .`
+```bash
+REPO_URL=us-central1-docker.pkg.dev/pe-staging-project-131b/images
+IMPERSONATE_SA=tf-platform@pe-terraform-project.iam.gserviceaccount.com
+
+docker buildx build --platform linux/amd64 -t $REPO_URL/cart:1 cart-cna-microservice
+
+gcloud auth login
+gcloud auth print-access-token \
+  --impersonate-service-account=$IMPERSONATE_SA \
+  | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
+
+docker push $REPO_URL/cart:1
+```
+
