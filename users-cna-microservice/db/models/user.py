@@ -8,4 +8,4 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     email = Column(String, nullable=False)
-    mobile = Column(Integer, nullable=False)
+    mobile = Column(String, nullable=False)

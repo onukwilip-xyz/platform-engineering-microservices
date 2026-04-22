@@ -40,10 +40,13 @@ For Windows,
 
 Build docker image,
 ```bash
+REPO_URL=us-central1-docker.pkg.dev/pe-staging-project-19e1/images
+IMPERSONATE_SA=tf-platform@pe-terraform-project.iam.gserviceaccount.com
+
 gcloud auth login
 gcloud auth print-access-token \
   --impersonate-service-account="$IMPERSONATE_SA" \
   | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
 
-docker buildx build --platform linux/amd64 -t $REPO_URL/store-ui:1 store-ui
+docker buildx build --platform linux/amd64 -t $REPO_URL/store-ui:v1 store-ui
 ```

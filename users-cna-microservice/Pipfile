@@ -6,8 +6,9 @@ name = "pypi"
 [packages]
 fastapi = "*"
 uvicorn = "*"
-sqlalchemy = "*"
+sqlalchemy = {extras = ["asyncio"], version = "*"}
 aiosqlite = "*"
+asyncpg = "*"
 
 [dev-packages]
 
