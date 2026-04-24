@@ -29,9 +29,9 @@ if is_postgres:
         # modest — PGBouncer is doing the real multiplexing. Each replica of
         # the users service holds up to (pool_size + max_overflow) connections
         # open to PGBouncer.
-        "pool_size": 10,
-        "max_overflow": 20,
-        "pool_timeout": 30,
+        "pool_size": 25,
+        "max_overflow": 50,
+        "pool_timeout": 10,
 
         # Critical for PGBouncer TRANSACTION mode:
         # - asyncpg's prepared-statement cache assumes a sticky backend.
