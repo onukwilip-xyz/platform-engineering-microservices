@@ -20,4 +20,14 @@ USER app
 
 EXPOSE 9090
 
-CMD ["python", "app.py"]
+CMD ["gunicorn", "app:app", \
+     "--workers", "4", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--worker-tmp-dir", "/dev/shm", \
+     "--bind", "0.0.0.0:9090", \
+     "--forwarded-allow-ips=*", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "--timeout", "60", \
+     "--keep-alive", "5", \
+     "--graceful-timeout", "30"]

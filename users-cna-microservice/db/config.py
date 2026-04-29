@@ -16,40 +16,17 @@ engine_kwargs = {
 
 if is_postgres:
     engine_kwargs.update({
-        # Test connections with a lightweight SELECT 1 before handing them out.
-        # Fixes "connection is closed" errors when PGBouncer recycles a backend
-        # but SQLAlchemy's pool still thinks the connection is alive.
-        "pool_pre_ping": True,
+    "pool_pre_ping": True,
+    "pool_recycle": 1800,
+    "pool_size": 25,                  
+    "max_overflow": 50,
+    "pool_timeout": 10,
 
-        # Recycle connections older than 30 min to avoid stale ones surviving
-        # PGBouncer's server_idle_timeout or network idle timeouts.
-        "pool_recycle": 1800,
-
-        # SQLAlchemy's own pool sizing. With PGBouncer in front, keep these
-        # modest — PGBouncer is doing the real multiplexing. Each replica of
-        # the users service holds up to (pool_size + max_overflow) connections
-        # open to PGBouncer.
-        "pool_size": 25,
-        "max_overflow": 50,
-        "pool_timeout": 10,
-
-        # Critical for PGBouncer TRANSACTION mode:
-        # - asyncpg's prepared-statement cache assumes a sticky backend.
-        #   PGBouncer routes each transaction to whichever backend is free,
-        #   so cached prepared statements end up on the wrong backend and
-        #   fail with DuplicatePreparedStatementError or silently misbehave.
-        # - statement_cache_size=0 disables asyncpg's server-side prepared stmts
-        # - prepared_statement_cache_size=0 disables the client-side cache too
-        "connect_args": {
-            "statement_cache_size": 0,
-            "prepared_statement_cache_size": 0,
-            "server_settings": {
-                # Disable JIT — it gives unpredictable latency under load and
-                # the planning overhead rarely helps for short OLTP queries.
-                "jit": "off",
-            },
-        },
-    })
+    "connect_args": {
+        "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0,
+    },
+})
 
 engine = create_async_engine(DATABASE_URL, **engine_kwargs)
 

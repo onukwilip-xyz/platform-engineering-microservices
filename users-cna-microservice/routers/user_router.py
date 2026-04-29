@@ -9,6 +9,11 @@ from schemas.user import UserCreate, UserRead, UserUpdate
 router = APIRouter()
 
 
+@router.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
 @router.post(
     "/users",
     response_model=UserRead,

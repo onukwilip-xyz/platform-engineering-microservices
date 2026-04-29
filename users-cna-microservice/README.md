@@ -31,4 +31,6 @@ gcloud auth print-access-token \
   | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
 
 docker buildx build --platform linux/amd64 -t $REPO_URL/users:v1 users-cna-microservice
-```
+
+docker run --name users -p 9090:9090 $REPO_URL/users:v1
+``` 
