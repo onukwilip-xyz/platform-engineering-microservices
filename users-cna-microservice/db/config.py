@@ -5,13 +5,11 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./test.db")
 
-# PGBouncer transaction-mode compatibility settings only apply to Postgres.
-# SQLite (used in tests/local) doesn't support these kwargs.
 is_postgres = DATABASE_URL.startswith("postgresql")
 
 engine_kwargs = {
     "future": True,
-    "echo": False,  # flip to True only when debugging; very noisy under load
+    "echo": False,
 }
 
 if is_postgres:

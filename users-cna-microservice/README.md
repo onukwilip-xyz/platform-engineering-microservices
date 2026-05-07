@@ -22,7 +22,7 @@ python app.py
 ```
 
 ```bash
-REPO_URL=us-central1-docker.pkg.dev/pe-staging-project-19e1/images
+REPO_URL=us-central1-docker.pkg.dev/pe-staging-project-affa/images
 IMPERSONATE_SA=tf-platform@pe-terraform-project.iam.gserviceaccount.com
 
 gcloud auth login
