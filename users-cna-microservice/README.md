@@ -22,8 +22,8 @@ python app.py
 ```
 
 ```bash
-REPO_URL=us-central1-docker.pkg.dev/pe-staging-project-affa/images
-IMPERSONATE_SA=tf-platform@pe-terraform-project.iam.gserviceaccount.com
+REPO_URL=us-central1-docker.pkg.dev/pe-staging-project-a422/images
+IMPERSONATE_SA=tf-platform@pe-terraform-project-1.iam.gserviceaccount.com
 
 gcloud auth login
 gcloud auth print-access-token \
@@ -31,6 +31,8 @@ gcloud auth print-access-token \
   | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
 
 docker buildx build --platform linux/amd64 -t $REPO_URL/users:v1 users-cna-microservice
+
+docker push $REPO_URL/users:v1
 
 docker run --name users -p 9090:9090 $REPO_URL/users:v1
 ``` 

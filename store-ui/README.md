@@ -40,8 +40,8 @@ For Windows,
 
 Build docker image,
 ```bash
-REPO_URL=us-central1-docker.pkg.dev/pe-staging-project-affa/images
-IMPERSONATE_SA=tf-platform@pe-terraform-project.iam.gserviceaccount.com
+REPO_URL=us-central1-docker.pkg.dev/pe-staging-project-a422/images
+IMPERSONATE_SA=tf-platform@pe-terraform-project-1.iam.gserviceaccount.com
 
 gcloud auth login
 gcloud auth print-access-token \
@@ -49,4 +49,6 @@ gcloud auth print-access-token \
   | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
 
 docker buildx build --platform linux/amd64 -t $REPO_URL/store-ui:v1 store-ui
+
+docker push $REPO_URL/store-ui:v1
 ```
