@@ -1,0 +1,200 @@
+name: "Microservice Reusable Pipeline"
+
+on:
+  workflow_call:
+    inputs:
+      github-environment:
+        type: string
+        required: true
+      pipeline-type:
+        description: "ci (build, test, scan — no push) or cd (build, scan, push to Artifact Registry)"
+        type: string
+        required: true
+      service-name:
+        type: string
+        required: true
+      working-directory:
+        type: string
+        required: true
+      dockerfile-path:
+        type: string
+        required: false
+        default: "Dockerfile"
+      artifact-registry-region:
+        type: string
+        required: false
+        default: "us-central1"
+      artifact-registry-repo:
+        type: string
+        required: false
+        default: "images"
+    outputs:
+      image:
+        description: "Full pushed image ref (cd runs only)"
+        value: ${{ jobs.pipeline.outputs.image }}
+
+jobs:
+  pipeline:
+    name: "${{ inputs.pipeline-type }} (${{ inputs.service-name }} / ${{ inputs.github-environment }})"
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.github-environment }}
+    outputs:
+      image: ${{ steps.tag.outputs.image }}
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect runtime
+        id: detect-runtime
+        shell: bash
+        run: |
+          if [ -f "build.gradle" ]; then
+            echo "runtime=java" >> "$GITHUB_OUTPUT"
+          elif [ -f "package.json" ]; then
+            echo "runtime=node" >> "$GITHUB_OUTPUT"
+          elif [ -f "Pipfile" ]; then
+            echo "runtime=python" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Could not detect a runtime for ${{ inputs.service-name }}" && exit 1
+          fi
+
+      - name: Set up Java
+        if: steps.detect-runtime.outputs.runtime == 'java'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Node.js
+        if: steps.detect-runtime.outputs.runtime == 'node'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: npm
+          cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+      - name: Set up Python
+        if: steps.detect-runtime.outputs.runtime == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build (Java)
+        if: steps.detect-runtime.outputs.runtime == 'java'
+        run: ./gradlew build -x test
+
+      - name: Build (Node)
+        if: steps.detect-runtime.outputs.runtime == 'node'
+        run: |
+          npm ci
+          npm run build --if-present
+
+      - name: Build (Python)
+        if: steps.detect-runtime.outputs.runtime == 'python'
+        run: |
+          pip install pipenv
+          pipenv install --deploy
+
+      - name: Unit tests (Java)
+        if: inputs.pipeline-type == 'ci' && steps.detect-runtime.outputs.runtime == 'java'
+        run: ./gradlew test
+
+      - name: Unit tests (Node)
+        if: inputs.pipeline-type == 'ci' && steps.detect-runtime.outputs.runtime == 'node'
+        run: npm test --if-present
+
+      - name: Unit tests (Python)
+        if: inputs.pipeline-type == 'ci' && steps.detect-runtime.outputs.runtime == 'python'
+        run: |
+          if [ -d tests ]; then
+            pipenv run pytest
+          else
+            echo "No tests/ directory — skipping"
+          fi
+
+      - name: Semgrep SAST scan
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: auto
+
+      # --- ci path: build locally, scan, never push ---
+
+      - name: Build container image (CI scan target)
+        if: inputs.pipeline-type == 'ci'
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          load: true
+          context: ${{ inputs.working-directory }}
+          file: ${{ inputs.working-directory }}/${{ inputs.dockerfile-path }}
+          tags: ${{ inputs.service-name }}:ci-scan
+
+      - name: Trivy container scan (CI)
+        if: inputs.pipeline-type == 'ci'
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ${{ inputs.service-name }}:ci-scan
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+      # --- cd path: authenticate, build, push, scan the pushed image ---
+
+      - name: Authenticate to GCP via WIF
+        if: inputs.pipeline-type == 'cd'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.CICD_SA_EMAIL }}
+
+      - name: Configure Docker auth for Artifact Registry
+        if: inputs.pipeline-type == 'cd'
+        run: gcloud auth configure-docker "${{ inputs.artifact-registry-region }}-docker.pkg.dev" --quiet
+
+      - name: Compute image tag
+        if: inputs.pipeline-type == 'cd'
+        id: tag
+        run: |
+          IMAGE="${{ inputs.artifact-registry-region }}-docker.pkg.dev/${{ vars.SERVICE_PROJECT_ID }}/${{ inputs.artifact-registry-repo }}/${{ inputs.service-name }}:${{ github.sha }}"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Build container image (CD scan target)
+        if: inputs.pipeline-type == 'cd'
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          load: true
+          context: ${{ inputs.working-directory }}
+          file: ${{ inputs.working-directory }}/${{ inputs.dockerfile-path }}
+          tags: ${{ steps.tag.outputs.image }}
+
+      - name: Trivy container scan (CD)
+        if: inputs.pipeline-type == 'cd'
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ${{ steps.tag.outputs.image }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - name: Upload Trivy SARIF to GitHub Security tab
+        if: inputs.pipeline-type == 'cd' && always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ inputs.working-directory }}/trivy-results.sarif
+
+      - name: Push container image
+        if: inputs.pipeline-type == 'cd'
+        run: docker push "${{ steps.tag.outputs.image }}"
+
+      - name: Image summary
+        if: inputs.pipeline-type == 'cd'
+        run: echo "### Pushed \`${{ steps.tag.outputs.image }}\`" >> "$GITHUB_STEP_SUMMARY"
