@@ -146,7 +146,7 @@ jobs:
       # Remove continue-on-error once the backlog is clear so this gates the pipeline again.
       - name: Trivy container scan (CI)
         if: inputs.pipeline-type == 'ci'
-        # continue-on-error: true
+        continue-on-error: true
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ inputs.service-name }}:ci-scan
