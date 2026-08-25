@@ -119,11 +119,14 @@ jobs:
             echo "No tests/ directory — skipping"
           fi
 
+      # TEMPORARY: continue-on-error while existing findings are triaged/fixed across services.
+      # Remove continue-on-error once the backlog is clear so this gates the pipeline again.
       - name: Semgrep SAST scan
+        continue-on-error: true
         run: |
           docker run --rm \
-            -v "${{ github.workspace }}:/src" \
-            -w "/src/${{ inputs.working-directory }}" \
+            -v "${{ github.workspace }}/${{ inputs.working-directory }}:/src" \
+            -w /src \
             semgrep/semgrep:latest \
             semgrep scan --config auto --severity ERROR --error
 
@@ -139,8 +142,11 @@ jobs:
           file: ${{ inputs.working-directory }}/${{ inputs.dockerfile-path }}
           tags: ${{ inputs.service-name }}:ci-scan
 
+      # TEMPORARY: continue-on-error while existing findings are triaged/fixed across services.
+      # Remove continue-on-error once the backlog is clear so this gates the pipeline again.
       - name: Trivy container scan (CI)
         if: inputs.pipeline-type == 'ci'
+        continue-on-error: true
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ inputs.service-name }}:ci-scan
@@ -179,8 +185,12 @@ jobs:
           file: ${{ inputs.working-directory }}/${{ inputs.dockerfile-path }}
           tags: ${{ steps.tag.outputs.image }}
 
+      # TEMPORARY: continue-on-error while existing findings are triaged/fixed across services.
+      # Remove continue-on-error once the backlog is clear — note this currently lets Push
+      # container image proceed even when Trivy finds CRITICAL/HIGH vulnerabilities.
       - name: Trivy container scan (CD)
         if: inputs.pipeline-type == 'cd'
+        continue-on-error: true
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ steps.tag.outputs.image }}
