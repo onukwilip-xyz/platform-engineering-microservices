@@ -136,7 +136,7 @@ jobs:
 
       - name: Trivy container scan (CI)
         if: inputs.pipeline-type == 'ci'
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ inputs.service-name }}:ci-scan
           format: table
@@ -176,7 +176,7 @@ jobs:
 
       - name: Trivy container scan (CD)
         if: inputs.pipeline-type == 'cd'
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ steps.tag.outputs.image }}
           format: sarif
