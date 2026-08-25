@@ -54,7 +54,7 @@ jobs:
 
   ci-products:
     needs: detect
-    # if:  needs.detect.outputs.products == 'true'
+    # if: needs.detect.outputs.products == 'true'
     if: false
     uses: ./.github/workflows/microservice-workflow-template.yaml
     secrets: inherit
