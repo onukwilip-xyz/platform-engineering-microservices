@@ -93,6 +93,8 @@ jobs:
         run: |
           npm ci
           npm run build --if-present
+        env:
+          CI: "false"
 
       - name: Build (Python)
         if: steps.detect-runtime.outputs.runtime == 'python'
@@ -118,9 +120,12 @@ jobs:
           fi
 
       - name: Semgrep SAST scan
-        uses: semgrep/semgrep-action@v1
-        with:
-          config: auto
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/src" \
+            -w "/src/${{ inputs.working-directory }}" \
+            semgrep/semgrep:latest \
+            semgrep scan --config auto --severity ERROR --error
 
       # --- ci path: build locally, scan, never push ---
 
