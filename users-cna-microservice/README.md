@@ -9,7 +9,7 @@ You must have following software on your machine,
 
 ## Setup (Local)
 
-Installa python packages referred in application.
+Install python packages referred in application..
 
 ```
 pipenv install
