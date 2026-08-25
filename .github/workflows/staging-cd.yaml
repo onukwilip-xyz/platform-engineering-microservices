@@ -1,0 +1,99 @@
+name: "Staging CD"
+
+on:
+  push:
+    branches:
+      - staging
+    paths:
+      - "cart-cna-microservice/**"
+      - "products-cna-microservice/**"
+      - "search-cna-microservice/**"
+      - "users-cna-microservice/**"
+      - "store-ui/**"
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      cart: ${{ steps.filter.outputs.cart }}
+      products: ${{ steps.filter.outputs.products }}
+      search: ${{ steps.filter.outputs.search }}
+      users: ${{ steps.filter.outputs.users }}
+      store-ui: ${{ steps.filter.outputs.store-ui }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect changed services
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            cart:
+              - "cart-cna-microservice/**"
+            products:
+              - "products-cna-microservice/**"
+            search:
+              - "search-cna-microservice/**"
+            users:
+              - "users-cna-microservice/**"
+            store-ui:
+              - "store-ui/**"
+
+  cd-cart:
+    needs: detect
+    # if: needs.detect.outputs.cart == 'true'
+    if: false
+    uses: ./.github/workflows/microservice-workflow-template.yaml
+    secrets: inherit
+    with:
+      github-environment: staging
+      pipeline-type: cd
+      service-name: cart
+      working-directory: cart-cna-microservice
+
+  cd-products:
+    needs: detect
+    # if: needs.detect.outputs.products == 'true'
+    if: false
+    uses: ./.github/workflows/microservice-workflow-template.yaml
+    secrets: inherit
+    with:
+      github-environment: staging
+      pipeline-type: cd
+      service-name: products
+      working-directory: products-cna-microservice
+
+  cd-search:
+    needs: detect
+    # if: needs.detect.outputs.search == 'true'
+    if: false
+    uses: ./.github/workflows/microservice-workflow-template.yaml
+    secrets: inherit
+    with:
+      github-environment: staging
+      pipeline-type: cd
+      service-name: search
+      working-directory: search-cna-microservice
+
+  cd-users:
+    needs: detect
+    if: needs.detect.outputs.users == 'true'
+    uses: ./.github/workflows/microservice-workflow-template.yaml
+    secrets: inherit
+    with:
+      github-environment: staging
+      pipeline-type: cd
+      service-name: users
+      working-directory: users-cna-microservice
+
+  cd-store-ui:
+    needs: detect
+    if: needs.detect.outputs.store-ui == 'true'
+    uses: ./.github/workflows/microservice-workflow-template.yaml
+    secrets: inherit
+    with:
+      github-environment: staging
+      pipeline-type: cd
+      service-name: store-ui
+      working-directory: store-ui
