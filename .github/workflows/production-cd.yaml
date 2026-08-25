@@ -42,7 +42,8 @@ jobs:
 
   cd-cart:
     needs: detect
-    if: needs.detect.outputs.cart == 'true'
+    # if: needs.detect.outputs.cart == 'true'
+    if: false
     uses: ./.github/workflows/microservice-workflow-template.yaml
     secrets: inherit
     with:
@@ -53,7 +54,8 @@ jobs:
 
   cd-products:
     needs: detect
-    if: needs.detect.outputs.products == 'true'
+    # if: needs.detect.outputs.products == 'true'
+    if: false
     uses: ./.github/workflows/microservice-workflow-template.yaml
     secrets: inherit
     with:
@@ -64,7 +66,8 @@ jobs:
 
   cd-search:
     needs: detect
-    if: needs.detect.outputs.search == 'true'
+    # if: needs.detect.outputs.search == 'true'
+    if: false
     uses: ./.github/workflows/microservice-workflow-template.yaml
     secrets: inherit
     with:
