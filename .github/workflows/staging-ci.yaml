@@ -1,5 +1,11 @@
 name: "Staging CI"
 
+permissions:
+  contents: read
+  id-token: write
+  security-events: write
+  actions: read
+
 on:
   pull_request:
     branches:

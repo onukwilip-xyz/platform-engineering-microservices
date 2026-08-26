@@ -16,7 +16,7 @@ app.include_router(user_router.router)
 @app.on_event("startup")
 async def startup():
     # Non-destructive by default: create missing tables only. When
-    # SEED_ON_STARTUP=true, drop + recreate + reseed the three demo users. —
+    # SEED_ON_STARTUP=true, drop + recreate + reseed the three demo users.
     # safe for local/dev, never enable in prod.
     async with engine.begin() as conn:
         if os.getenv("SEED_ON_STARTUP", "false").lower() == "true":

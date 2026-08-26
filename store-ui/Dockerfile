@@ -18,7 +18,7 @@ WORKDIR $APP_BUILD_DIR
 # Copy package.json to /app directory
 COPY package.json .
 
-# Install node modules/dependencies
+# Install node modules/dependencies...
 RUN npm install -f
 
 # Copy application code
