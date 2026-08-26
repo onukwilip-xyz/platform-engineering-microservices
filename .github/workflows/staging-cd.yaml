@@ -57,6 +57,8 @@ jobs:
       pipeline-type: cd
       service-name: cart
       working-directory: cart-cna-microservice
+      tfvars-variable-name: cart_microservice_image_tag
+      terraform-resource-address: kubernetes_manifest.cart_microservice
 
   cd-products:
     needs: detect
@@ -69,6 +71,8 @@ jobs:
       pipeline-type: cd
       service-name: products
       working-directory: products-cna-microservice
+      tfvars-variable-name: products_microservice_image_tag
+      terraform-resource-address: kubernetes_manifest.products_microservice
 
   cd-search:
     needs: detect
@@ -81,6 +85,8 @@ jobs:
       pipeline-type: cd
       service-name: search
       working-directory: search-cna-microservice
+      tfvars-variable-name: search_microservice_image_tag
+      terraform-resource-address: kubernetes_manifest.search_microservice
 
   cd-users:
     needs: detect
@@ -92,6 +98,8 @@ jobs:
       pipeline-type: cd
       service-name: users
       working-directory: users-cna-microservice
+      tfvars-variable-name: users_microservice_image_tag
+      terraform-resource-address: kubernetes_manifest.users_microservice
 
   cd-store-ui:
     needs: detect
@@ -103,3 +111,5 @@ jobs:
       pipeline-type: cd
       service-name: store-ui
       working-directory: store-ui
+      tfvars-variable-name: store_ui_image_tag
+      terraform-resource-address: kubernetes_manifest.store_ui
