@@ -1,5 +1,11 @@
 name: "Microservice Reusable Pipeline"
 
+permissions:
+  contents: read
+  id-token: write
+  security-events: write
+  actions: read
+
 on:
   workflow_call:
     inputs:
