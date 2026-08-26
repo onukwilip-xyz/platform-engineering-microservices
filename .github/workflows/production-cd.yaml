@@ -16,6 +16,19 @@ on:
       - "search-cna-microservice/**"
       - "users-cna-microservice/**"
       - "store-ui/**"
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Microservice to deploy (or 'all')"
+        type: choice
+        default: all
+        options:
+          - all
+          - cart
+          - products
+          - search
+          - users
+          - store-ui
 
 jobs:
   detect:
@@ -48,7 +61,7 @@ jobs:
 
   cd-cart:
     needs: detect
-    # if: needs.detect.outputs.cart == 'true'
+    # if: needs.detect.outputs.cart == 'true' || (github.event_name == 'workflow_dispatch' && (inputs.service == 'cart' || inputs.service == 'all'))
     if: false
     uses: ./.github/workflows/microservice-workflow-template.yaml
     secrets: inherit
@@ -62,7 +75,7 @@ jobs:
 
   cd-products:
     needs: detect
-    # if: needs.detect.outputs.products == 'true'
+    # if: needs.detect.outputs.products == 'true' || (github.event_name == 'workflow_dispatch' && (inputs.service == 'products' || inputs.service == 'all'))
     if: false
     uses: ./.github/workflows/microservice-workflow-template.yaml
     secrets: inherit
@@ -76,7 +89,7 @@ jobs:
 
   cd-search:
     needs: detect
-    # if: needs.detect.outputs.search == 'true'
+    # if: needs.detect.outputs.search == 'true' || (github.event_name == 'workflow_dispatch' && (inputs.service == 'search' || inputs.service == 'all'))
     if: false
     uses: ./.github/workflows/microservice-workflow-template.yaml
     secrets: inherit
@@ -90,7 +103,7 @@ jobs:
 
   cd-users:
     needs: detect
-    if: needs.detect.outputs.users == 'true'
+    if: needs.detect.outputs.users == 'true' || (github.event_name == 'workflow_dispatch' && (inputs.service == 'users' || inputs.service == 'all'))
     uses: ./.github/workflows/microservice-workflow-template.yaml
     secrets: inherit
     with:
@@ -103,7 +116,7 @@ jobs:
 
   cd-store-ui:
     needs: detect
-    if: needs.detect.outputs.store-ui == 'true'
+    if: needs.detect.outputs.store-ui == 'true' || (github.event_name == 'workflow_dispatch' && (inputs.service == 'store-ui' || inputs.service == 'all'))
     uses: ./.github/workflows/microservice-workflow-template.yaml
     secrets: inherit
     with:
