@@ -16,6 +16,19 @@ on:
       - "search-cna-microservice/**"
       - "users-cna-microservice/**"
       - "store-ui/**"
+  workflow_dispatch:
+    inputs:
+      service:
+        description: "Microservice to deploy (or 'all')"
+        type: choice
+        default: all
+        options:
+          - all
+          - cart
+          - products
+          - search
+          - users
+          - store-ui
 
 jobs:
   detect:
@@ -48,7 +61,7 @@ jobs:
 
   cd-cart:
     needs: detect
-    # if: needs.detect.outputs.cart == 'true'
+    # if: needs.detect.outputs.cart == 'true' || (github.event_name == 'workflow_dispatch' && (inputs.service == 'cart' || inputs.service == 'all'))
     if: false
     uses: ./.github/workflows/microservice-workflow-template.yaml
     secrets: inherit
@@ -57,10 +70,12 @@ jobs:
       pipeline-type: cd
       service-name: cart
       working-directory: cart-cna-microservice
+      tfvars-variable-name: cart_microservice_image_tag
+      terraform-resource-address: kubernetes_manifest.cart_microservice
 
   cd-products:
     needs: detect
-    # if: needs.detect.outputs.products == 'true'
+    # if: needs.detect.outputs.products == 'true' || (github.event_name == 'workflow_dispatch' && (inputs.service == 'products' || inputs.service == 'all'))
     if: false
     uses: ./.github/workflows/microservice-workflow-template.yaml
     secrets: inherit
@@ -69,10 +84,12 @@ jobs:
       pipeline-type: cd
       service-name: products
       working-directory: products-cna-microservice
+      tfvars-variable-name: products_microservice_image_tag
+      terraform-resource-address: kubernetes_manifest.products_microservice
 
   cd-search:
     needs: detect
-    # if: needs.detect.outputs.search == 'true'
+    # if: needs.detect.outputs.search == 'true' || (github.event_name == 'workflow_dispatch' && (inputs.service == 'search' || inputs.service == 'all'))
     if: false
     uses: ./.github/workflows/microservice-workflow-template.yaml
     secrets: inherit
@@ -81,10 +98,12 @@ jobs:
       pipeline-type: cd
       service-name: search
       working-directory: search-cna-microservice
+      tfvars-variable-name: search_microservice_image_tag
+      terraform-resource-address: kubernetes_manifest.search_microservice
 
   cd-users:
     needs: detect
-    if: needs.detect.outputs.users == 'true'
+    if: needs.detect.outputs.users == 'true' || (github.event_name == 'workflow_dispatch' && (inputs.service == 'users' || inputs.service == 'all'))
     uses: ./.github/workflows/microservice-workflow-template.yaml
     secrets: inherit
     with:
@@ -92,10 +111,12 @@ jobs:
       pipeline-type: cd
       service-name: users
       working-directory: users-cna-microservice
+      tfvars-variable-name: users_microservice_image_tag
+      terraform-resource-address: kubernetes_manifest.users_microservice
 
   cd-store-ui:
     needs: detect
-    if: needs.detect.outputs.store-ui == 'true'
+    if: needs.detect.outputs.store-ui == 'true' || (github.event_name == 'workflow_dispatch' && (inputs.service == 'store-ui' || inputs.service == 'all'))
     uses: ./.github/workflows/microservice-workflow-template.yaml
     secrets: inherit
     with:
@@ -103,3 +124,5 @@ jobs:
       pipeline-type: cd
       service-name: store-ui
       working-directory: store-ui
+      tfvars-variable-name: store_ui_image_tag
+      terraform-resource-address: kubernetes_manifest.store_ui
