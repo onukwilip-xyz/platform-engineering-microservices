@@ -34,6 +34,16 @@ on:
         type: string
         required: false
         default: "images"
+      tfvars-variable-name:
+        description: "PE repo tfvars variable to update after a successful cd push, e.g. users_microservice_image_tag. Omit to skip triggering a PE-repo deploy (e.g. services with no Terraform-managed Application yet)."
+        type: string
+        required: false
+        default: ""
+      terraform-resource-address:
+        description: "PE repo Terraform resource address to target, e.g. kubernetes_manifest.users_microservice. Required if tfvars-variable-name is set."
+        type: string
+        required: false
+        default: ""
     outputs:
       image:
         description: "Full pushed image ref (cd runs only)"
@@ -178,7 +188,7 @@ jobs:
         if: inputs.pipeline-type == 'cd'
         id: tag
         run: |
-          IMAGE="${{ inputs.artifact-registry-region }}-docker.pkg.dev/${{ vars.SERVICE_PROJECT_ID }}/${{ inputs.artifact-registry-repo }}/${{ inputs.service-name }}:${{ github.sha }}"
+          IMAGE="${{ inputs.artifact-registry-region }}-docker.pkg.dev/${{ vars.SERVICE_PROJECT_ID }}/${{ inputs.artifact-registry-repo }}/${{ inputs.service-name }}:${{ inputs.github-environment }}-${{ github.sha }}"
           echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
 
       - name: Build container image (CD scan target)
@@ -219,3 +229,20 @@ jobs:
       - name: Image summary
         if: inputs.pipeline-type == 'cd'
         run: echo "### Pushed \`${{ steps.tag.outputs.image }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Trigger PE repo deploy
+        if: inputs.pipeline-type == 'cd' && inputs.tfvars-variable-name != ''
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: microservice-image-update-template.yaml
+          repo: onukwilip-xyz/platform-engineering-project
+          ref: main
+          token: ${{ secrets.PE_REPO_DISPATCH_TOKEN }}
+          wait-for-completion: true
+          inputs: |
+            {
+              "github-environment": "${{ inputs.github-environment }}",
+              "tfvars-variable-name": "${{ inputs.tfvars-variable-name }}",
+              "terraform-resource-address": "${{ inputs.terraform-resource-address }}",
+              "image-tag": "${{ inputs.github-environment }}-${{ github.sha }}"
+            }
